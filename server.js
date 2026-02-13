@@ -1,45 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
+const { Resend } = require('resend');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const EMAIL_FROM = process.env.EMAIL_FROM;
+const EMAIL_TO = process.env.EMAIL_TO;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // 587 ke liye false
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS.trim()
-  },
-  requireTLS: true,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
-
-transporter.verify(function (error, success) {
-  if (error) {
-    console.log("SMTP ERROR:", error);
-  } else {
-    console.log("SMTP READY");
-  }
-});
-
 // Helper function to send email
 async function sendEmail(subject, formData, formType) {
   const emailContent = generateEmailContent(formData, formType);
 
-  // Log form data for manual email sending
   console.log('\n📧 NEW FORM SUBMISSION:');
   console.log('📋 Subject:', subject);
   console.log('📊 Form Type:', formType);
@@ -48,34 +28,32 @@ async function sendEmail(subject, formData, formType) {
   console.log('📧 Send email to: worksunsysolar@gmail.com');
   console.log('--- END OF SUBMISSION ---\n');
 
-
-
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: 'worksunsysolar@gmail.com',
-    subject: subject,
-    html: emailContent
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent successfully for ${formType} form`);
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: EMAIL_TO,
+      subject: subject,
+      html: emailContent,
+    });
+
+    console.log(`✅ Email sent successfully for ${formType} form`);
     return { success: true, message: 'Form submitted successfully!' };
+
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Error sending email:', error);
     return { success: false, message: 'Failed to submit form. Please try again.' };
   }
 }
 
-// Generate email content based on form type
+// Generate email content
 function generateEmailContent(data, formType) {
   let content = '';
 
-  // Common styles
   const containerStyle = "background: #f8fafc; padding: 20px; border-radius: 10px; font-family: Arial, sans-serif;";
   const headerStyle = "color: #0b1320; font-family: Arial, sans-serif;";
 
   switch (formType) {
+
     case 'residential':
       content = `
         <h2 style="${headerStyle}">🏠 Residential Solar Inquiry</h2>
@@ -179,59 +157,32 @@ function generateEmailContent(data, formType) {
 
 // Routes
 
-// Residential Solar Form
 app.post('/api/residential', async (req, res) => {
-  try {
-    const result = await sendEmail('🏠 Residential Solar Inquiry - Sunsy Solar', req.body, 'residential');
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  const result = await sendEmail('🏠 Residential Solar Inquiry - Sunsy Solar', req.body, 'residential');
+  res.json(result);
 });
 
-// Commercial Solar Form
 app.post('/api/commercial', async (req, res) => {
-  try {
-    console.log('Commercial form data received:', req.body);
-    const result = await sendEmail('🏢 Commercial Solar Inquiry - Sunsy Solar', req.body, 'commercial');
-    res.json(result);
-  } catch (error) {
-    console.error('Commercial form error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  const result = await sendEmail('🏢 Commercial Solar Inquiry - Sunsy Solar', req.body, 'commercial');
+  res.json(result);
 });
 
-// Housing Society Form
 app.post('/api/housing', async (req, res) => {
-  try {
-    const result = await sendEmail('🏘️ Housing Society Solar Inquiry - Sunsy Solar', req.body, 'housing');
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  const result = await sendEmail('🏘️ Housing Society Solar Inquiry - Sunsy Solar', req.body, 'housing');
+  res.json(result);
 });
 
-// Maintenance Form
 app.post('/api/maintenance', async (req, res) => {
-  try {
-    const result = await sendEmail('🔧 Solar Maintenance Request - Sunsy Solar', req.body, 'maintenance');
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  const result = await sendEmail('🔧 Solar Maintenance Request - Sunsy Solar', req.body, 'maintenance');
+  res.json(result);
 });
 
-// Contact Form
 app.post('/api/contact', async (req, res) => {
-  try {
-    const result = await sendEmail('📞 Contact Form Submission - Sunsy Solar', req.body, 'contact');
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+  const result = await sendEmail('📞 Contact Form Submission - Sunsy Solar', req.body, 'contact');
+  res.json(result);
 });
 
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
@@ -239,6 +190,5 @@ app.get('/api/health', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Sunsy Solar Backend Server running on port ${PORT}`);
-  console.log(`📧 Email service configured for: ${process.env.EMAIL_USER}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
 });
