@@ -27,36 +27,41 @@ const transporter = nodemailer.createTransport({
 });
 
 // Helper function to send email
+// async function sendEmail(subject, formData, formType) {
+//   const emailContent = generateEmailContent(formData, formType);
+
+//   // Log form data for manual email sending
+//   console.log('\n📧 NEW FORM SUBMISSION:');
+//   console.log('📋 Subject:', subject);
+//   console.log('📊 Form Type:', formType);
+//   console.log('📝 Form Data:', JSON.stringify(formData, null, 2));
+//   console.log('⏰ Time:', new Date().toLocaleString());
+//   console.log('📧 Send email to: worksunsysolar@gmail.com');
+//   console.log('--- END OF SUBMISSION ---\n');
+
+
+
+//   const mailOptions = {
+//     from: process.env.EMAIL_FROM,
+//     to: 'worksunsysolar@gmail.com',
+//     subject: subject,
+//     html: emailContent
+//   };
+
+//   try {
+//     await transporter.sendMail(mailOptions);
+//     console.log(`Email sent successfully for ${formType} form`);
+//     return { success: true, message: 'Form submitted successfully!' };
+//   } catch (error) {
+//     console.error('Error sending email:', error);
+//     return { success: false, message: 'Failed to submit form. Please try again.' };
+//   }
+// }
 async function sendEmail(subject, formData, formType) {
-  const emailContent = generateEmailContent(formData, formType);
-
-  // Log form data for manual email sending
-  console.log('\n📧 NEW FORM SUBMISSION:');
-  console.log('📋 Subject:', subject);
-  console.log('📊 Form Type:', formType);
-  console.log('📝 Form Data:', JSON.stringify(formData, null, 2));
-  console.log('⏰ Time:', new Date().toLocaleString());
-  console.log('📧 Send email to: worksunsysolar@gmail.com');
-  console.log('--- END OF SUBMISSION ---\n');
-
-
-
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: 'worksunsysolar@gmail.com',
-    subject: subject,
-    html: emailContent
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent successfully for ${formType} form`);
-    return { success: true, message: 'Form submitted successfully!' };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, message: 'Failed to submit form. Please try again.' };
-  }
+  console.log("Skipping email for test");
+  return { success: true, message: "Test success" };
 }
+
 
 // Generate email content based on form type
 function generateEmailContent(data, formType) {
