@@ -15,53 +15,50 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false,
+  port: Number(process.env.EMAIL_PORT),
+  secure: false, // 587 ke liye false
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    pass: process.env.EMAIL_PASS.trim()
   },
-  tls: {
-    rejectUnauthorized: false
-  }
+  requireTLS: true,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
+
 // Helper function to send email
-// async function sendEmail(subject, formData, formType) {
-//   const emailContent = generateEmailContent(formData, formType);
-
-//   // Log form data for manual email sending
-//   console.log('\n📧 NEW FORM SUBMISSION:');
-//   console.log('📋 Subject:', subject);
-//   console.log('📊 Form Type:', formType);
-//   console.log('📝 Form Data:', JSON.stringify(formData, null, 2));
-//   console.log('⏰ Time:', new Date().toLocaleString());
-//   console.log('📧 Send email to: worksunsysolar@gmail.com');
-//   console.log('--- END OF SUBMISSION ---\n');
-
-
-
-//   const mailOptions = {
-//     from: process.env.EMAIL_FROM,
-//     to: 'worksunsysolar@gmail.com',
-//     subject: subject,
-//     html: emailContent
-//   };
-
-//   try {
-//     await transporter.sendMail(mailOptions);
-//     console.log(`Email sent successfully for ${formType} form`);
-//     return { success: true, message: 'Form submitted successfully!' };
-//   } catch (error) {
-//     console.error('Error sending email:', error);
-//     return { success: false, message: 'Failed to submit form. Please try again.' };
-//   }
-// }
 async function sendEmail(subject, formData, formType) {
-  console.log("Skipping email for test");
-  return { success: true, message: "Test success" };
-}
+  const emailContent = generateEmailContent(formData, formType);
 
+  // Log form data for manual email sending
+  console.log('\n📧 NEW FORM SUBMISSION:');
+  console.log('📋 Subject:', subject);
+  console.log('📊 Form Type:', formType);
+  console.log('📝 Form Data:', JSON.stringify(formData, null, 2));
+  console.log('⏰ Time:', new Date().toLocaleString());
+  console.log('📧 Send email to: worksunsysolar@gmail.com');
+  console.log('--- END OF SUBMISSION ---\n');
+
+
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: 'worksunsysolar@gmail.com',
+    subject: subject,
+    html: emailContent
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully for ${formType} form`);
+    return { success: true, message: 'Form submitted successfully!' };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, message: 'Failed to submit form. Please try again.' };
+  }
+}
 
 // Generate email content based on form type
 function generateEmailContent(data, formType) {
